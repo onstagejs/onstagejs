@@ -1,0 +1,23 @@
+{
+  "name": "onstagejs",
+  "version": "0.0.0",
+  "description": "Distributed computation library using studio actors",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "onstagejs"
+  },
+  "keywords": [
+    "actor",
+    "frp",
+    "js",
+    "javascript",
+    "reactive",
+    "programming"
+  ],
+  "author": "Erich Oliveira",
+  "license": "ISC"
+}
