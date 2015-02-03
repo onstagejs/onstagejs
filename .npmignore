@@ -1,0 +1,14 @@
+node_modules/
+target/
+tests/target/
+.grunt/
+_SpecRunner.html
+docs/
+bin/
+coverage/
+dist/
+src/
+tests/
+examples/
+.travis.yml
+.gitignore

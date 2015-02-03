@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "onstage.js",
+  "sourceRoot": "../../src/core/",
+  "sources": [
+    "onstage.coffee"
+  ],
+  "names": [],
+  "mappings": "AAAA;AAAA,EAAA,MAAM,CAAC,OAAP,GAAe;AAAA,IACb,MAAA,EAAO,OAAA,CAAQ,QAAR,CADM;AAAA,IAEb,YAAA,EAAa,OAAA,CAAQ,gBAAR,CAFA;AAAA,IAGb,kBAAA,EAAmB,OAAA,CAAQ,sBAAR,CAHN;GAAf,CAAA;AAAA"
+}

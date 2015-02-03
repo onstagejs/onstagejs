@@ -1,13 +1,14 @@
-Studio = require('../../compiled/core/studio');
+var OnStage = require('../../compiled/core/onstage');
+var Studio  = OnStage.Studio;
 describe("An actor factory", function() {
   var SENDER_ID = 'sender_factory_1',
     RECEIVER_ID = 'receiver_factory_1',
     INTERCEPTOR_ID = 'interceptor_1';
-  var senderPromise = Studio.actorFactory.send(Studio.actorFactory.id, {
+  var senderPromise = OnStage.actorFactory.send(OnStage.actorFactory.id, {
     id: SENDER_ID,
     process: function(message, headers) {}
   });
-  var receiverPromise = Studio.actorFactory.send(Studio.actorFactory.id, {
+  var receiverPromise = OnStage.actorFactory.send(OnStage.actorFactory.id, {
     id: RECEIVER_ID,
     process: function(message, headers) {
       return true;
@@ -29,7 +30,7 @@ describe("An actor factory", function() {
       response) {
       var sender = response[0];
       var receiver = response[1];
-      var interceptor = Studio.interceptorFactory.send(Studio.interceptorFactory
+      var interceptor = OnStage.interceptorFactory.send(OnStage.interceptorFactory
         .id, {
           id: INTERCEPTOR_ID,
           routes: RECEIVER_ID,
