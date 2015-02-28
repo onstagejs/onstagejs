@@ -31,7 +31,8 @@ class ActorFactory
         message.next=produceNext(0,message)
         router.send(sender,@_interceptors[0].id,message)
     options.process = process
-    proxy = new Actor(options)
+    type = options.type or Actor
+    proxy = new type(options)
     proxy._interceptors=[]
     proxy._interceptors.push(interceptor) for interceptor in interceptors when interceptor.routes(proxy.id)
     proxies.push(proxy)

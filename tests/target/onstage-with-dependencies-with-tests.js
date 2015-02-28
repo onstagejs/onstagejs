@@ -18,7 +18,7 @@
     function ActorFactory() {}
 
     ActorFactory.prototype.create = function(options) {
-      var interceptor, process, proxy, _i, _len;
+      var interceptor, process, proxy, type, _i, _len;
       options._innerProcess = options.process;
       process = function(body, headers, sender, receiver) {
         var message, produceNext;
@@ -58,7 +58,8 @@
         }
       };
       options.process = process;
-      proxy = new Actor(options);
+      type = options.type || Actor;
+      proxy = new type(options);
       proxy._interceptors = [];
       for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
         interceptor = interceptors[_i];
@@ -94,9 +95,9 @@
     function InterceptorFactory() {}
 
     InterceptorFactory.prototype.create = function(options) {
-      var clazz, interceptor, proxy, _i, _len;
-      clazz = options.clazz || Actor;
-      interceptor = new clazz(options);
+      var interceptor, proxy, type, _i, _len;
+      type = options.type || Actor;
+      interceptor = new type(options);
       interceptors.push(interceptor);
       for (_i = 0, _len = proxies.length; _i < _len; _i++) {
         proxy = proxies[_i];

@@ -10,8 +10,8 @@ class InterceptorFactory
   # @option options [Class] clazz Actor class (optional)
   # @option options [Function] initialize function called after actor creation (optional)
   create:(options)->
-    clazz = options.clazz or Actor
-    interceptor = new clazz(options)
+    type = options.type or Actor
+    interceptor = new type(options)
     interceptors.push(interceptor)
     proxy._interceptors.push(interceptor) for proxy in proxies when interceptor.routes(proxy.id)
     interceptor
