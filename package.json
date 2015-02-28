@@ -1,10 +1,10 @@
 {
   "name": "onstagejs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Distributed computation library using studio actors",
   "main": "index.js",
-  "dependencies":{
-    "studio":"0.9.2"
+  "dependencies": {
+    "studio": "0.9.14"
   },
   "repository": {
     "type": "git",

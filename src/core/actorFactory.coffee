@@ -1,41 +1,41 @@
 Studio = require('studio')
 Actor = Studio.Actor
 router = Studio.router
-Q = Studio.Q
+Promise = require('studio').Promise
 
 interceptors = require('./interceptors')
 
-actors = []
-proxies=[]
+proxies=require('./proxies')
 # Responsible for create and manage an actor lifecycle.
-class ActorFactory extends Actor
+class ActorFactory
   #Creates a new Actor
   # @param [Object] options the actor options
   # @option options [String] id actor id (should be unique) when you instantiate an actor you automatically create a stream on the router with this id
   # @option options [Function] process the process function which will be executed for every message
   # @option options [Function] initialize function called after actor creation (optional)
-  process:(options)->
+  create:(options)->
     options._innerProcess = options.process
-    process = (body,sender,receiver)->
-      toCallInterceptors=[]
-      toCallInterceptors.push(interceptor) for interceptor in interceptors when interceptor.route[receiver]
-      message = {body,sender,receiver}
+    process = (body,headers,sender,receiver)->
+      message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
-        if index==toCallInterceptors.length-1
-          ()=> Q.fcall(()=>@_innerProcess(body,sender,receiver))
+        if index==@_interceptors.length-1
+          ()=> Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
         else
-          nextRoute = toCallInterceptors[index+1].interceptor.id
+          nextRoute = @_interceptors[index+1].id
           ()->
             message.next = produceNext(index+1,message)
             router.send(sender,nextRoute,message)
-      if toCallInterceptors.length==0
-        Q.fcall(()=>@_innerProcess(body,sender,receiver))
+      if @_interceptors.length==0
+        Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
       else
         message.next=produceNext(0,message)
-        router.send(sender,toCallInterceptors[0].interceptor.id,message)
+        router.send(sender,@_interceptors[0].id,message)
     options.process = process
-    proxy = new Actor(options)
+    type = options.type or Actor
+    proxy = new type(options)
+    proxy._interceptors=[]
+    proxy._interceptors.push(interceptor) for interceptor in interceptors when interceptor.routes(proxy.id)
+    proxies.push(proxy)
     proxy
 
-
-module.exports =new ActorFactory({id:'createActor'})
+module.exports =new ActorFactory()
