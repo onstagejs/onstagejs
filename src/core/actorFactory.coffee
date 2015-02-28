@@ -19,9 +19,6 @@ class ActorFactory
     process = (body,headers,sender,receiver)->
       toCallInterceptors=[]
       toCallInterceptors.push(interceptor) for interceptor in interceptors when interceptor.route(receiver)
-      console.log('R',receiver)
-      console.log('T',toCallInterceptors)
-      console.log('I',interceptors)
       message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
         if index==toCallInterceptors.length-1
@@ -32,7 +29,7 @@ class ActorFactory
             message.next = produceNext(index+1,message)
             router.send(sender,nextRoute,message)
       if toCallInterceptors.length==0
-        Promise.method(()=>@_innerProcess(body,sender,receiver))()
+        Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
       else
         message.next=produceNext(0,message)
         router.send(sender,toCallInterceptors[0].interceptor.id,message)

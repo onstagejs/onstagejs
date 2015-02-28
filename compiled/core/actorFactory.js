@@ -30,9 +30,6 @@
             toCallInterceptors.push(interceptor);
           }
         }
-        console.log('R', receiver);
-        console.log('T', toCallInterceptors);
-        console.log('I', interceptors);
         message = {
           body: body,
           headers: headers,
@@ -60,7 +57,7 @@
         if (toCallInterceptors.length === 0) {
           return Promise.method((function(_this) {
             return function() {
-              return _this._innerProcess(body, sender, receiver);
+              return _this._innerProcess(body, headers, sender, receiver);
             };
           })(this))();
         } else {
