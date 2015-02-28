@@ -16,7 +16,6 @@ class ActorFactory
   create:(options)->
     options._innerProcess = options.process
     process = (body,headers,sender,receiver)->
-
       message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
         if index==@_interceptors.length-1
