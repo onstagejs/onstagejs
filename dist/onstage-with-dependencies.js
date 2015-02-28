@@ -22,7 +22,7 @@
     ActorFactory.prototype.create = function(options) {
       var process, proxy;
       options._innerProcess = options.process;
-      process = function(body, sender, receiver) {
+      process = function(body, headers, sender, receiver) {
         var interceptor, message, produceNext, toCallInterceptors, _i, _len;
         toCallInterceptors = [];
         for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
@@ -31,8 +31,12 @@
             toCallInterceptors.push(interceptor);
           }
         }
+        console.log('R', receiver);
+        console.log('T', toCallInterceptors);
+        console.log('I', interceptors);
         message = {
           body: body,
+          headers: headers,
           sender: sender,
           receiver: receiver
         };

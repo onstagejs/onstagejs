@@ -16,10 +16,13 @@ class ActorFactory
   # @option options [Function] initialize function called after actor creation (optional)
   create:(options)->
     options._innerProcess = options.process
-    process = (body,sender,receiver)->
+    process = (body,headers,sender,receiver)->
       toCallInterceptors=[]
       toCallInterceptors.push(interceptor) for interceptor in interceptors when interceptor.route(receiver)
-      message = {body,sender,receiver}
+      console.log('R',receiver)
+      console.log('T',toCallInterceptors)
+      console.log('I',interceptors)
+      message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
         if index==toCallInterceptors.length-1
           ()=> Promise.method(()=>@_innerProcess(body,sender,receiver))()

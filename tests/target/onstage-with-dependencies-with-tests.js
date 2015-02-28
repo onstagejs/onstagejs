@@ -22,7 +22,7 @@
     ActorFactory.prototype.create = function(options) {
       var process, proxy;
       options._innerProcess = options.process;
-      process = function(body, sender, receiver) {
+      process = function(body, headers, sender, receiver) {
         var interceptor, message, produceNext, toCallInterceptors, _i, _len;
         toCallInterceptors = [];
         for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
@@ -31,8 +31,12 @@
             toCallInterceptors.push(interceptor);
           }
         }
+        console.log('R', receiver);
+        console.log('T', toCallInterceptors);
+        console.log('I', interceptors);
         message = {
           body: body,
+          headers: headers,
           sender: sender,
           receiver: receiver
         };
@@ -8542,6 +8546,17 @@ describe("An actor factory", function () {
 	var SENDER_ID = 'sender_factory_1',
 		RECEIVER_ID = 'receiver_factory_1',
 		INTERCEPTOR_ID = 'interceptor_1';
+
+	var interceptor = OnStage.interceptorFactory.create({
+		id: INTERCEPTOR_ID,
+		routes: function (route) {
+			return route === RECEIVER_ID;
+		},
+		process: function (message, sender) {
+			this.called = true;
+			return message.next();
+		}
+	});
 	var sender = OnStage.actorFactory.create({
 		id: SENDER_ID,
 		process: function (message, headers) {}
@@ -8552,24 +8567,17 @@ describe("An actor factory", function () {
 			return true;
 		}
 	});
-	var interceptor = OnStage.interceptorFactory.create({
-		id: INTERCEPTOR_ID,
-		routes: function (route) {
-			return route === RECEIVER_ID;
-		},
-		process: function (message, sender) {
-			return message.next();
-		}
-	});
+
 	it("should be able to create an actor", function (done) {
-		sender.send(RECEIVER_ID, 'factory').then(function (result) {
+		sender.send(RECEIVER_ID).then(function (result) {
 			expect(result).toBe(true);
 			done();
 		});
 	});
 	it("should be able to intercept an actor", function (done) {
-		sender.send(RECEIVER_ID, 'factory').then(function (
+		sender.send(RECEIVER_ID).then(function (
 			result) {
+			expect(interceptor.called).toBe(true);
 			expect(result).toBe(true);
 			done();
 		});
