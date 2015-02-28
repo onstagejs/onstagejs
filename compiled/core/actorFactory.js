@@ -1,7 +1,5 @@
 (function() {
-  var Actor, ActorFactory, Q, Studio, actors, interceptors, proxies, router,
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  var Actor, ActorFactory, Promise, Studio, actors, interceptors, proxies, router;
 
   Studio = require('studio');
 
@@ -9,7 +7,7 @@
 
   router = Studio.router;
 
-  Q = Studio.Q;
+  Promise = require('studio').Promise;
 
   interceptors = require('./interceptors');
 
@@ -17,14 +15,10 @@
 
   proxies = [];
 
-  ActorFactory = (function(_super) {
-    __extends(ActorFactory, _super);
+  ActorFactory = (function() {
+    function ActorFactory() {}
 
-    function ActorFactory() {
-      return ActorFactory.__super__.constructor.apply(this, arguments);
-    }
-
-    ActorFactory.prototype.process = function(options) {
+    ActorFactory.prototype.create = function(options) {
       var process, proxy;
       options._innerProcess = options.process;
       process = function(body, sender, receiver) {
@@ -32,7 +26,7 @@
         toCallInterceptors = [];
         for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
           interceptor = interceptors[_i];
-          if (interceptor.route[receiver]) {
+          if (interceptor.route(receiver)) {
             toCallInterceptors.push(interceptor);
           }
         }
@@ -46,9 +40,9 @@
             var nextRoute;
             if (index === toCallInterceptors.length - 1) {
               return function() {
-                return Q.fcall(function() {
+                return Promise.method(function() {
                   return _this._innerProcess(body, sender, receiver);
-                });
+                })();
               };
             } else {
               nextRoute = toCallInterceptors[index + 1].interceptor.id;
@@ -60,11 +54,11 @@
           };
         })(this);
         if (toCallInterceptors.length === 0) {
-          return Q.fcall((function(_this) {
+          return Promise.method((function(_this) {
             return function() {
               return _this._innerProcess(body, sender, receiver);
             };
-          })(this));
+          })(this))();
         } else {
           message.next = produceNext(0, message);
           return router.send(sender, toCallInterceptors[0].interceptor.id, message);
@@ -77,11 +71,9 @@
 
     return ActorFactory;
 
-  })(Actor);
+  })();
 
-  module.exports = new ActorFactory({
-    id: 'createActor'
-  });
+  module.exports = new ActorFactory();
 
 }).call(this);
 
