@@ -1,6 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function() {
-  var Actor, ActorFactory, Promise, Studio, actors, interceptors, proxies, router;
+  var Actor, ActorFactory, Promise, Studio, interceptors, proxies, router;
 
   Studio = require('studio');
 
@@ -12,25 +12,16 @@
 
   interceptors = require('./interceptors');
 
-  actors = [];
-
-  proxies = [];
+  proxies = require('./proxies');
 
   ActorFactory = (function() {
     function ActorFactory() {}
 
     ActorFactory.prototype.create = function(options) {
-      var process, proxy;
+      var interceptor, process, proxy, _i, _len;
       options._innerProcess = options.process;
       process = function(body, headers, sender, receiver) {
-        var interceptor, message, produceNext, toCallInterceptors, _i, _len;
-        toCallInterceptors = [];
-        for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
-          interceptor = interceptors[_i];
-          if (interceptor.route(receiver)) {
-            toCallInterceptors.push(interceptor);
-          }
-        }
+        var message, produceNext;
         message = {
           body: body,
           headers: headers,
@@ -40,14 +31,14 @@
         produceNext = (function(_this) {
           return function(index, message) {
             var nextRoute;
-            if (index === toCallInterceptors.length - 1) {
+            if (index === _this._interceptors.length - 1) {
               return function() {
                 return Promise.method(function() {
-                  return _this._innerProcess(body, sender, receiver);
+                  return _this._innerProcess(body, headers, sender, receiver);
                 })();
               };
             } else {
-              nextRoute = toCallInterceptors[index + 1].interceptor.id;
+              nextRoute = _this._interceptors[index + 1].id;
               return function() {
                 message.next = produceNext(index + 1, message);
                 return router.send(sender, nextRoute, message);
@@ -55,7 +46,7 @@
             }
           };
         })(this);
-        if (toCallInterceptors.length === 0) {
+        if (this._interceptors.length === 0) {
           return Promise.method((function(_this) {
             return function() {
               return _this._innerProcess(body, headers, sender, receiver);
@@ -63,11 +54,19 @@
           })(this))();
         } else {
           message.next = produceNext(0, message);
-          return router.send(sender, toCallInterceptors[0].interceptor.id, message);
+          return router.send(sender, this._interceptors[0].id, message);
         }
       };
       options.process = process;
       proxy = new Actor(options);
+      proxy._interceptors = [];
+      for (_i = 0, _len = interceptors.length; _i < _len; _i++) {
+        interceptor = interceptors[_i];
+        if (interceptor.routes(proxy.id)) {
+          proxy._interceptors.push(interceptor);
+        }
+      }
+      proxies.push(proxy);
       return proxy;
     };
 
@@ -81,25 +80,30 @@
 
 //# sourceMappingURL=../maps/actorFactory.js.map
 
-},{"./interceptors":3,"studio":12}],2:[function(require,module,exports){
+},{"./interceptors":3,"./proxies":5,"studio":13}],2:[function(require,module,exports){
 (function() {
-  var Actor, InterceptorFactory, interceptors;
+  var Actor, InterceptorFactory, interceptors, proxies;
 
   Actor = require('studio').Actor;
 
   interceptors = require('./interceptors');
 
+  proxies = require('./proxies');
+
   InterceptorFactory = (function() {
     function InterceptorFactory() {}
 
     InterceptorFactory.prototype.create = function(options) {
-      var clazz, interceptor;
+      var clazz, interceptor, proxy, _i, _len;
       clazz = options.clazz || Actor;
       interceptor = new clazz(options);
-      interceptors.push({
-        interceptor: interceptor,
-        route: options.routes
-      });
+      interceptors.push(interceptor);
+      for (_i = 0, _len = proxies.length; _i < _len; _i++) {
+        proxy = proxies[_i];
+        if (interceptor.routes(proxy.id)) {
+          proxy._interceptors.push(interceptor);
+        }
+      }
       return interceptor;
     };
 
@@ -113,7 +117,7 @@
 
 //# sourceMappingURL=../maps/interceptorFactory.js.map
 
-},{"./interceptors":3,"studio":12}],3:[function(require,module,exports){
+},{"./interceptors":3,"./proxies":5,"studio":13}],3:[function(require,module,exports){
 (function() {
   module.exports = [];
 
@@ -134,7 +138,15 @@
 
 //# sourceMappingURL=../maps/onstage.js.map
 
-},{"./actorFactory":1,"./interceptorFactory":2,"studio":12}],5:[function(require,module,exports){
+},{"./actorFactory":1,"./interceptorFactory":2,"studio":13}],5:[function(require,module,exports){
+(function() {
+  module.exports = [];
+
+}).call(this);
+
+//# sourceMappingURL=../maps/proxies.js.map
+
+},{}],6:[function(require,module,exports){
 (function (global){
 (function() {
   var Bacon, BufferingSource, Bus, CompositeUnsubscribe, ConsumingSource, DepCache, Desc, Dispatcher, End, Error, Event, EventStream, Exception, Initial, Next, None, Observable, Property, PropertyDispatcher, Some, Source, UpdateBarrier, addPropertyInitValueToStream, assert, assertArray, assertEventStream, assertFunction, assertNoArguments, assertString, cloneArray, compositeUnsubscribe, containsDuplicateDeps, convertArgsToFunction, describe, end, eventIdCounter, findDeps, flatMap_, former, idCounter, initial, isArray, isFieldKey, isFunction, isObservable, latterF, liftCallback, makeFunction, makeFunctionArgs, makeFunction_, makeObservable, makeSpawner, next, nop, partiallyApplied, recursionDepth, registerObs, spys, toCombinator, toEvent, toFieldExtractor, toFieldKey, toOption, toSimpleExtractor, withDescription, withMethodCallSupport, _, _ref,
@@ -3227,7 +3239,7 @@
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 // Generated by CoffeeScript 1.7.1
 (function() {
   var __hasProp = {}.hasOwnProperty,
@@ -3268,9 +3280,9 @@
 
 }).call(this);
 
-},{}],7:[function(require,module,exports){
-
 },{}],8:[function(require,module,exports){
+
+},{}],9:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -3358,7 +3370,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function() {
   var Actor, ArrayUtil, Bacon, BaseClass, Promise, clone, fs, router,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -3592,7 +3604,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../maps/actor.js.map
 
-},{"./router":11,"./util/arrayUtil":13,"./util/baseClass":14,"./util/clone":15,"baconjs":5,"bluebird":17,"fs":7}],10:[function(require,module,exports){
+},{"./router":12,"./util/arrayUtil":14,"./util/baseClass":15,"./util/clone":16,"baconjs":6,"bluebird":18,"fs":8}],11:[function(require,module,exports){
 (function() {
   var Bacon, BaseClass, Driver, Promise, router,
     __hasProp = {}.hasOwnProperty,
@@ -3660,7 +3672,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../maps/driver.js.map
 
-},{"./router":11,"./util/baseClass":14,"baconjs":5,"bluebird":17}],11:[function(require,module,exports){
+},{"./router":12,"./util/baseClass":15,"baconjs":6,"bluebird":18}],12:[function(require,module,exports){
 (function() {
   var Bacon, Promise, Router, Timer, clone, _routes;
 
@@ -3745,7 +3757,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../maps/router.js.map
 
-},{"./util/clone":15,"./util/timer":16,"baconjs":5,"bluebird":17}],12:[function(require,module,exports){
+},{"./util/clone":16,"./util/timer":17,"baconjs":6,"bluebird":18}],13:[function(require,module,exports){
 (function() {
   var oldStudio, _global;
 
@@ -3773,7 +3785,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../maps/studio.js.map
 
-},{"./actor":9,"./driver":10,"./router":11,"baconjs":5,"bluebird":17}],13:[function(require,module,exports){
+},{"./actor":10,"./driver":11,"./router":12,"baconjs":6,"bluebird":18}],14:[function(require,module,exports){
 (function() {
   module.exports.isArray = Array.isArray || function(value) {
     return {}.toString.call(value) === '[object Array]';
@@ -3783,7 +3795,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../../maps/arrayUtil.js.map
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function() {
   var BaseClass, csextends;
 
@@ -3806,7 +3818,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../../maps/baseClass.js.map
 
-},{"csextends":6}],15:[function(require,module,exports){
+},{"csextends":7}],16:[function(require,module,exports){
 (function() {
   var clone;
 
@@ -3847,7 +3859,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../../maps/clone.js.map
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function() {
   var Timer;
 
@@ -3867,7 +3879,7 @@ process.chdir = function (dir) {
 
 //# sourceMappingURL=../../maps/timer.js.map
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -8536,16 +8548,17 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":8}],18:[function(require,module,exports){
+},{"_process":9}],19:[function(require,module,exports){
 var OnStage = require('../../compiled/core/onstage');
 var Studio = OnStage.Studio;
 describe("An actor factory", function () {
 	var SENDER_ID = 'sender_factory_1',
 		RECEIVER_ID = 'receiver_factory_1',
-		INTERCEPTOR_ID = 'interceptor_1';
+		INTERCEPTOR_AFTER_ID = 'interceptor_after',
+		INTERCEPTOR_BEFORE_ID = 'interceptor_before';
 
-	var interceptor = OnStage.interceptorFactory.create({
-		id: INTERCEPTOR_ID,
+	var interceptorBefore = OnStage.interceptorFactory.create({
+		id: INTERCEPTOR_BEFORE_ID,
 		routes: function (route) {
 			return route === RECEIVER_ID;
 		},
@@ -8564,7 +8577,16 @@ describe("An actor factory", function () {
 			return true;
 		}
 	});
-
+	var interceptorAfter = OnStage.interceptorFactory.create({
+		id: INTERCEPTOR_AFTER_ID,
+		routes: function (route) {
+			return route === RECEIVER_ID;
+		},
+		process: function (message, sender) {
+			this.called = true;
+			return message.next();
+		}
+	});
 	it("should be able to create an actor", function (done) {
 		sender.send(RECEIVER_ID).then(function (result) {
 			expect(result).toBe(true);
@@ -8574,11 +8596,12 @@ describe("An actor factory", function () {
 	it("should be able to intercept an actor", function (done) {
 		sender.send(RECEIVER_ID).then(function (
 			result) {
-			expect(interceptor.called).toBe(true);
+			expect(interceptorBefore.called).toBe(true);
+			expect(interceptorAfter.called).toBe(true);
 			expect(result).toBe(true);
 			done();
 		});
 	});
 });
 
-},{"../../compiled/core/onstage":4}]},{},[18]);
+},{"../../compiled/core/onstage":4}]},{},[19]);

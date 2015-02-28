@@ -1,5 +1,6 @@
 Actor = require('studio').Actor
 interceptors = require('./interceptors')
+proxies = require('./proxies')
 #Responsible for intercept actor calls
 class InterceptorFactory
   #Creates a new interceptor
@@ -11,9 +12,7 @@ class InterceptorFactory
   create:(options)->
     clazz = options.clazz or Actor
     interceptor = new clazz(options)
-    interceptors.push({
-      interceptor:interceptor,
-      route:options.routes
-    })
+    interceptors.push(interceptor)
+    proxy._interceptors.push(interceptor) for proxy in proxies when interceptor.routes(proxy.id)
     interceptor
 module.exports=new InterceptorFactory()

@@ -5,8 +5,7 @@ Promise = require('studio').Promise
 
 interceptors = require('./interceptors')
 
-actors = []
-proxies=[]
+proxies=require('./proxies')
 # Responsible for create and manage an actor lifecycle.
 class ActorFactory
   #Creates a new Actor
@@ -17,25 +16,26 @@ class ActorFactory
   create:(options)->
     options._innerProcess = options.process
     process = (body,headers,sender,receiver)->
-      toCallInterceptors=[]
-      toCallInterceptors.push(interceptor) for interceptor in interceptors when interceptor.route(receiver)
+
       message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
-        if index==toCallInterceptors.length-1
-          ()=> Promise.method(()=>@_innerProcess(body,sender,receiver))()
+        if index==@_interceptors.length-1
+          ()=> Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
         else
-          nextRoute = toCallInterceptors[index+1].interceptor.id
+          nextRoute = @_interceptors[index+1].id
           ()->
             message.next = produceNext(index+1,message)
             router.send(sender,nextRoute,message)
-      if toCallInterceptors.length==0
+      if @_interceptors.length==0
         Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
       else
         message.next=produceNext(0,message)
-        router.send(sender,toCallInterceptors[0].interceptor.id,message)
+        router.send(sender,@_interceptors[0].id,message)
     options.process = process
     proxy = new Actor(options)
+    proxy._interceptors=[]
+    proxy._interceptors.push(interceptor) for interceptor in interceptors when interceptor.routes(proxy.id)
+    proxies.push(proxy)
     proxy
-
 
 module.exports =new ActorFactory()
