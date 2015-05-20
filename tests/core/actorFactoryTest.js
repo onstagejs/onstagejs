@@ -32,7 +32,7 @@ describe("An actor factory", function () {
 	var receiver = OnStage.actorFactory.create({
 		id: RECEIVER_ID,
 		process: function (message, headers) {
-			return Studio.Promise.try(function () {
+			return Studio.Promise.attempt(function () {
 				return true;
 			});
 		}

@@ -4,7 +4,7 @@
   "description": "Distributed computation library using studio actors",
   "main": "./compiled/core/onstage.js",
   "dependencies": {
-    "studio": "0.9.14"
+    "studio": "^0.9.27"
   },
   "repository": {
     "type": "git",

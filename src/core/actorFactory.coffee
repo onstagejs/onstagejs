@@ -19,14 +19,18 @@ class ActorFactory
       message = {body,headers,sender,receiver}
       produceNext = (index,message)=>
         if index==@_interceptors.length-1
-          ()=> Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
+          (nextMessage)=>
+            message = nextMessage or message
+            {body,headers,sender,receiver} = message
+            @_innerProcess(body,headers,sender,receiver)
         else
           nextRoute = @_interceptors[index+1].id
-          ()->
+          (nextMessage)->
+            message = nextMessage or message
             message.next = produceNext(index+1,message)
             router.send(sender,nextRoute,message)
       if @_interceptors.length==0
-        Promise.method(()=>@_innerProcess(body,headers,sender,receiver))()
+        @_innerProcess(body,headers,sender,receiver)
       else
         message.next=produceNext(0,message)
         router.send(sender,@_interceptors[0].id,message)
